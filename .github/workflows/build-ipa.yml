@@ -18,31 +18,17 @@ jobs:
                      -scheme MacauAI \
                      -configuration Release \
                      -sdk iphoneos \
-                     -derivedDataPath build \
+                     -derivedDataPath ../build \
                      CODE_SIGN_IDENTITY="" \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGNING_ALLOWED=NO \
                      ARCHS=arm64 \
                      clean build
 
-      - name: Debug find
-        run: |
-          echo "=== Build output ==="
-          find iOSApp/build -type d -name "MacauAI*" 2>/dev/null || true
-          find iOSApp/build -type d -name "*.app" 2>/dev/null || true
-          echo "=== Flat ==="
-          ls -la iOSApp/build/ 2>/dev/null || true
-          ls -la iOSApp/build/Build/Products/Release-iphoneos/ 2>/dev/null || true
-
       - name: Package IPA
         run: |
-          APP_PATH=
-          if [ -z "$APP_PATH" ]; then
-            APP_PATH=
-          fi
-          echo "APP_PATH="
           mkdir -p Payload/MacauAI.app
-          cp -r ""/* Payload/MacauAI.app/
+          cp -r build/Build/Products/Release-iphoneos/MacauAI.app/* Payload/MacauAI.app/
           cp iOSApp/index.html Payload/MacauAI.app/
           zip -r MacauAI.ipa Payload/
 
