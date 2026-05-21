@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>澳门彩AI · 智能预测引擎</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="theme-color" content="#0d1117">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', Roboto, Helvetica, Arial, sans-serif; }
+        :root { --bg-primary: #0d1117; --bg-card: #161b22; --bg-header: #1a1f2e; --border: #30363d; --text-primary: #f0f6fc; --text-secondary: #8b949e; --accent: #ff6b35; --hit: #3fb950; --miss: #f85149; --ball-red: #e74c3c; --ball-blue: #3498db; --ball-green: #2ecc71; --warning: #d29922; }
+        body { background: var(--bg-primary); color: var(--text-primary); font-weight: 500; max-width: 580px; margin: 0 auto; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); overflow: hidden; }
+        .card-header { padding: 10px 12px; background: var(--bg-header); border-bottom: 1px solid var(--border); font-size: clamp(0.8rem, 1.2vw + 0.4rem, 0.95rem); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); }
+        .card-body { padding: 12px; }
+        .btn-icon { background: var(--bg-header); border: 1px solid var(--border); color: var(--text-primary); border-radius: 40px; padding: 4px 8px; font-size: clamp(0.6rem, 1vw + 0.2rem, 0.75rem); cursor: pointer; font-weight: 600; }
+        .btn-icon.primary { background: var(--accent); color: #fff; border-color: var(--accent); padding: 6px 14px; }
+        .btn-icon.primary:hover { background: #e55a2b; border-color: #e55a2b; }
+        .num-ball { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; font-size: clamp(0.85rem, 2vw + 0.4rem, 1.1rem); font-weight: 800; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .ball-red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .ball-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .ball-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .ball-special { border: 2px solid var(--warning); box-shadow: 0 0 0 2px #fff, 0 0 12px rgba(255,149,0,0.5); }
+        .zodiac-sm { font-size: clamp(0.45rem, 0.8vw + 0.2rem, 0.6rem); font-weight: 600; color: var(--text-secondary); }
+        .plus-sign { font-size: clamp(0.85rem, 2vw + 0.3rem, 1.2rem); font-weight: 800; color: #f87171; margin: 0 2px; flex-shrink: 0; }
+        .draw-area { padding: 14px 12px 10px; }
+        .draw-numbers { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 4px; overflow-x: auto; padding: 6px 8px; }
+        .num-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .section-divider { height: 8px; background: var(--bg-primary); }
+        #drawExpect { font-size: clamp(0.55rem, 0.9vw + 0.3rem, 0.7rem); }
+
+        /* ===== 后台回测风格（匹配参考 index.html） ===== */
+        .bt-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; padding: 12px; }
+        .bt-card .bt-expect { text-align: center; font-size: clamp(13px, 1.8vw + 8px, 17px); font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+        .bt-expect { text-align: center; font-size: clamp(13px, 1.8vw + 8px, 17px); font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+        .bt-pred-area { background: var(--bg-header); border-radius: 8px; padding: 10px; margin: 0; }
+        .bt-pred-label { font-size: clamp(9px, 1vw + 6px, 12px); color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
+        .bt-pred-row { margin-bottom: 4px; }
+        .bt-dim-tag { display: flex; align-items: center; justify-content: center; width: 2.2em; height: 2.2em; border-radius: 50%; font-size: clamp(10px, 1.2vw + 6px, 13px); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.25); margin: auto; }
+        .bt-dim-tag.red { color: #ff6b6b; background: rgba(231,76,60,0.18); }
+        .bt-dim-tag.blue { color: #60a5fa; background: rgba(52,152,219,0.18); }
+        .bt-dim-tag.green { color: #4ade80; background: rgba(39,174,96,0.18); }
+        .bt-dim-tag.zodiac { color: var(--text-primary); background: var(--bg-header); }
+        .tag-grid { display: grid; gap: 4px; }
+        .tag-grid-10 { grid-template-columns: repeat(10, 1fr); }
+        .bt-pred-row .tag-grid { margin-top: 2px; }
+
+        /* ===== 网格判断 ===== */
+        .bt-dim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 8px 0 0; }
+        .bt-dim-cell { background: var(--bg-primary); border-radius: 6px; padding: 6px 2px; text-align: center; font-size: clamp(10px, 1.2vw + 6px, 13px); }
+        .bt-dim-cell .bt-dim-label { color: var(--text-secondary); margin-bottom: 2px; font-size: clamp(8px, 0.9vw + 5px, 11px); font-weight: 700; }
+        .bt-hit-badge { display: inline-block; padding: 2px 8px; font-size: clamp(10px, 1.2vw + 6px, 13px); font-weight: 700; border-radius: 6px; }
+        .bt-hit-badge.yes { background: rgba(134,239,172,0.15); color: var(--hit); }
+        .bt-hit-badge.no { background: rgba(252,165,165,0.15); color: var(--miss); }
+        .bt-hit-badge.wait { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+
+        .action-row { display: flex; gap: 8px; padding: 6px 12px 10px; justify-content: center; flex-wrap: wrap; }
+        .countdown-bar { text-align: center; font-size: clamp(0.6rem, 1vw + 0.3rem, 0.75rem); font-weight: 600; color: var(--text-secondary); padding: 6px 12px; background: var(--bg-header); }
+        .countdown-num { color: var(--accent); font-weight: 800; letter-spacing: 1px; }
+        .countdown-live { color: var(--miss); font-weight: 800; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.75); color: #fff; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 9999; white-space: nowrap; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        header.app-header { background: var(--bg-card); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        header.app-header h1 { font-size: clamp(14px, 1.8vw + 8px, 18px); font-weight: 800; display: flex; align-items: center; gap: 6px; margin: 0; color: var(--text-primary); }
+        header.app-header h1 i { font-size: 16px; color: var(--accent); }
+        header.app-header .header-right { display: flex; align-items: center; gap: 6px; }
+        header.app-header .header-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 15px; cursor: pointer; padding: 4px; transition: color 0.2s; }
+        header.app-header .header-btn:hover { color: var(--text-primary); }
+        .ws-status-badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #95a5a6; margin-left: 4px; vertical-align: middle; }
+        .ws-status-badge.connected { background: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
+        .ws-status-badge.disconnected { background: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
+        .loading-text { color: var(--text-secondary); font-size: clamp(0.7rem, 1vw + 0.3rem, 0.85rem); font-weight: 600; text-align: center; padding: 20px 0; }
+        @keyframes pop { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+        .pop-animation { animation: pop 0.35s ease-out forwards; }
+        @keyframes pulse { 0%,100%{opacity:0.55} 50%{opacity:1} }
+        .placeholder-ball { animation: pulse 1.2s ease-in-out infinite; }
+        .num-item:nth-child(1) .placeholder-ball { animation-delay: 0s; }
+        .num-item:nth-child(2) .placeholder-ball { animation-delay: 0.15s; }
+        .num-item:nth-child(3) .placeholder-ball { animation-delay: 0.3s; }
+        .num-item:nth-child(4) .placeholder-ball { animation-delay: 0.45s; }
+        .num-item:nth-child(5) .placeholder-ball { animation-delay: 0.6s; }
+        .num-item:nth-child(6) .placeholder-ball { animation-delay: 0.75s; }
+        .num-item:nth-child(8) .placeholder-ball { animation-delay: 0.9s; } /* +号占一个位置，特码球是第8个子元素 */
+        @media (max-width: 420px) {
+            .num-ball { width: 30px !important; height: 30px !important; font-size: clamp(0.75rem, 3vw, 0.85rem) !important; }
+        }
+        @media (min-width: 768px) {
+            body { padding: 16px 24px; }
+            .card { border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+            .card-body { padding: 14px 16px; }
+            .num-ball { width: 40px; height: 40px; }
+        }
+        footer.app-footer { text-align: center; font-size: clamp(0.5rem, 0.8vw + 0.2rem, 0.65rem); font-weight: 600; color: var(--text-secondary); padding: 12px env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left); }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 合并卡片：Header + 开奖 + 预测 ===== -->
+    <div class="card">
+        <header class="app-header">
+            <h1><i class="fas fa-brain"></i>澳门彩AI <span id="wsStatus" class="ws-status-badge" title="离线心跳"></span></h1>
+            <div class="header-right">
+                <button class="header-btn" id="refreshBtn" title="刷新"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </header>
+        <div class="card-body" style="padding-bottom:4px">
+            <div style="text-align:center;margin-bottom:6px"><span id="drawExpect" style="background:var(--bg-header);padding:1px 10px;border-radius:8px;border:1px solid var(--border);display:inline-block;font-weight:700">最新开奖</span></div>
+            <div class="draw-numbers" id="drawNumbers">
+                <div style="color:var(--text-secondary);font-size:0.8rem;padding:8px">暂无开奖数据</div>
+            </div>
+        </div>
+        <div style="height:6px;background:var(--bg-primary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)"></div>
+        <div class="card-body" id="predictionContent">
+            <div class="loading-text"><i class="fas fa-spinner fa-spin"></i> 计算中...</div>
+        </div>
+        <div class="countdown-bar" id="countdownBar">下期开奖倒计时 <span class="countdown-num" id="countdownNum">--:--:--</span></div>
+        <div class="action-row">
+            <button class="btn-icon" id="copyDrawBtn"><i class="fas fa-copy"></i> 复制开奖</button>
+            <button class="btn-icon primary" id="copyPredBtn"><i class="fas fa-copy"></i> 复制预测</button>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div>基于AI智能引擎 · 仅供参考娱乐</div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const RED = new Set([1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46]);
+        const BLUE = new Set([3,4,9,10,14,15,20,25,26,31,32,36,37,41,42,47,48]);
+        const ZODIAC = ["马","蛇","龙","兔","虎","牛","鼠","猪","狗","鸡","猴","羊"];
+
+        function wave(n) { return RED.has(n) ? 'red' : BLUE.has(n) ? 'blue' : 'green'; }
+        function waveName(n) { return {red:'红波',blue:'蓝波',green:'绿波'}[wave(n)]; }
+        function zodiac(n) { return ZODIAC[(n-1)%12]; }
+        function pad(n) { return String(n).padStart(2,'0'); }
+
+        // 玄学映射
+        const ELEM = {0:'金',1:'金',2:'木',3:'木',4:'水',5:'水',6:'火',7:'火',8:'土',9:'土'};
+        const ELEM_GEN = { '金':'水', '水':'木', '木':'火', '火':'土', '土':'金' };
+        const ELEM_RES = { '金':'木', '木':'土', '土':'水', '水':'火', '火':'金' };
+        // 生肖三合（ZODIAC index 组）
+        const TRIAD = [[10,6,2],[1,9,5],[4,0,8],[7,3,11]];
+        // 生肖六合（pair）
+        const SIX_H = [[6,5],[4,7],[3,8],[2,9],[1,10],[0,11]];
+        // 生肖相冲（pair）
+        const CONFLICT = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // 跨平台复制（APK/iOS WebView 通用）
+        function copyToClipboard(text) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => showToast('已复制')).catch(() => fallbackCopy(text));
+                } else {
+                    fallbackCopy(text);
+                }
+            } catch(e) {
+                fallbackCopy(text);
+            }
+        }
+        function fallbackCopy(text) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.top = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus(); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('已复制');
+            } catch(e) {
+                showToast('长按选择复制');
+            }
+        }
+
+        async function fetchLiveDraw() {
+            try {
+                const r = await fetch('https://macaumarksix.com/api/live2', { signal: AbortSignal.timeout(5000) });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const j = await r.json();
+                if (j && j.expect) {
+                    // 处理部分开奖：空字符串或缺失 → null，补齐到 7 位
+                    const rawCodes = (j.openCode || '').split(',');
+                    const codes = [];
+                    for (let i = 0; i < 7; i++) {
+                        const v = (rawCodes[i] || '').trim();
+                        codes.push(v !== '' ? Number(v) : null);
+                    }
+                    return { expect: j.expect, codes };
+                }
+            } catch(e) {
+                console.warn('[fetchLiveDraw] 获取开奖失败:', e.message);
+            }
+            return null;
+        }
+
+        async function fetchHistory(year) {
+            try {
+                const r = await fetch(`https://history.macaumarksix.com/history/macaujc2/y/${year}`);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const j = await r.json();
+                if (j.code === 200 && Array.isArray(j.data))
+                    return j.data.map(d => ({ expect: d.expect, openCode: d.openCode.split(',').map(Number) })).filter(d => d.openCode.length === 7);
+            } catch(e) {
+                console.warn('[fetchHistory] 获取历史数据失败:', e.message);
+            }
+            return [];
+        }
+
+        // 独立预测波色 & 生肖（不依赖号码评分，用历史特码的波色/生肖时间序列）
+        function predictWaveZodiac(history) {
+            const N = history.length;
+            const limit = Math.min(N, 50);
+            const latest = history[0];
+            const latestZodIdx = (latest.openCode[6] - 1) % 12;
+            const WAVES = ['红波','蓝波','绿波'];
+
+            // === 波色：频率 + 遗漏 + 趋势 ===
+            const waveSeq = history.slice(0, limit).map(d => waveName(d.openCode[6]));
+            // 最大遗漏估算：每个波色理论上约 3 期出一次，6-8 期为偏冷
+            const waveScores = {};
+            for (const w of WAVES) {
+                const miss = waveSeq.findIndex(x => x === w); // 遗漏期数
+                const freq20 = waveSeq.slice(0, 20).filter(x => x === w).length / 20;
+                const trend5 = waveSeq.slice(0, 5).filter(x => x === w).length;
+                // 综合：频率×0.4 + 回归压力(越冷越加分)×0.35 + 近期趋势×0.25
+                const score = freq20 * 0.4
+                    + Math.min(1, (miss >= 0 ? miss : 50) / 8) * 0.35
+                    + (trend5 / 5) * 0.25;
+                waveScores[w] = score;
+            }
+            const waves = Object.entries(waveScores).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]);
+
+            // === 生肖：频率 + 遗漏 + 三合/六合/相冲 ===
+            const zodiacSeq = history.slice(0, limit).map(d => zodiac(d.openCode[6]));
+            const zodiacScores = {};
+            ZODIAC.forEach((z, zi) => {
+                const miss = zodiacSeq.findIndex(x => x === z);
+                const missVal = miss >= 0 ? miss : limit;
+                const freq20 = zodiacSeq.slice(0, 20).filter(x => x === z).length / 20;
+
+                let score = freq20 * 0.25 + Math.min(1, missVal / 12) * 0.25;
+
+                // 三合 +0.3
+                for (const triad of TRIAD) {
+                    if (triad.includes(latestZodIdx) && triad.includes(zi) && zi !== latestZodIdx) {
+                        score += 0.3; break;
+                    }
+                }
+                // 六合 +0.2
+                for (const pair of SIX_H) {
+                    if ((pair[0]===latestZodIdx && pair[1]===zi) || (pair[1]===latestZodIdx && pair[0]===zi)) {
+                        score += 0.2; break;
+                    }
+                }
+                // 相冲 -0.3
+                for (const pair of CONFLICT) {
+                    if ((pair[0]===latestZodIdx && pair[1]===zi) || (pair[1]===latestZodIdx && pair[0]===zi)) {
+                        score -= 0.3; break;
+                    }
+                }
+
+                zodiacScores[z] = Math.max(0, score);
+            });
+
+            const sortedZ = Object.entries(zodiacScores).sort((a,b)=>b[1]-a[1]);
+            const sixiao = sortedZ.slice(0,6).map(e=>e[0]);
+            const sanxiao = sortedZ.slice(0,3).map(e=>e[0]);
+
+            return { waves, sixiao, sanxiao };
+        }
+
+        // 带波色/生肖约束的精选选取（先保证覆盖，再高分填坑）
+        function pickWithGuarantees(scores, count, waves, sanxiao) {
+            const result = [];
+            const used = new Set();
+            const sorted = [...scores].sort((a,b) => b.finalScore - a.finalScore);
+
+            // Phase 1：每个预测波色至少保 1 个
+            if (count >= 10) {
+                for (const w of waves) {
+                    for (const s of sorted) {
+                        if (used.has(s.n)) continue;
+                        if (waveName(s.n) !== w) continue;
+                        result.push(s.n); used.add(s.n); break;
+                    }
+                }
+            }
+
+            // Phase 2：每个三肖生肖至少保 1 个
+            if (count >= 10) {
+                for (const z of sanxiao) {
+                    for (const s of sorted) {
+                        if (used.has(s.n)) continue;
+                        if (zodiac(s.n) !== z) continue;
+                        result.push(s.n); used.add(s.n); break;
+                    }
+                }
+            }
+
+            // Phase 3：高分填满剩余名额
+            for (const s of sorted) {
+                if (result.length >= count) break;
+                if (used.has(s.n)) continue;
+                result.push(s.n); used.add(s.n);
+            }
+
+            return result;
+        }
+
+        function predict(history) {
+            const TOTAL = 49;
+            const N = history.length;
+            const latest = history[0];
+            if (!latest) return null;
+            const nextExpect = String(parseInt(latest.expect) + 1);
+
+            // === 1. 基础统计初始化 ===
+            const freq50 = {}, freq20 = {}, freq50R = {};
+            const trend = {}, appearS = {};
+            for (let i = 1; i <= TOTAL; i++) { freq50[i]=0; freq20[i]=0; freq50R[i]=0; trend[i]=0; appearS[i]=[]; }
+
+            // 同出矩阵 49×49
+            const pairM = {};
+            for (let i = 1; i <= TOTAL; i++) { pairM[i]={}; for (let j = 1; j <= TOTAL; j++) pairM[i][j]=0; }
+
+            // 转移率统计：全部历史中每个号码的平码/特码出现次数
+            const freqAllS = {}, freqAllR = {};
+            for (let i = 1; i <= TOTAL; i++) { freqAllS[i]=0; freqAllR[i]=0; }
+
+            // 分区统计
+            const zones = [[1,10],[11,20],[21,30],[31,40],[41,49]];
+            const zCount = zones.map(() => 0);
+            let oddTotal = 0, evenTotal = 0;
+
+            const limit = Math.min(N, 50);
+            for (let idx = 0; idx < limit; idx++) {
+                const d = history[idx];
+                const sp = d.openCode[6];
+                appearS[sp].push(idx);
+                freq50[sp]++;
+                if (idx < 20) freq20[sp]++;
+                if (idx < 10) trend[sp] += Math.pow(0.9, idx);
+
+                // 平码频率 + 奇偶统计
+                const regs = d.openCode.slice(0, 6);
+                for (let k = 0; k < 6; k++) {
+                    const n = regs[k];
+                    freq50R[n]++;
+                    if (n % 2 === 1) oddTotal++; else evenTotal++;
+                }
+
+                // 同出关系
+                for (let a = 0; a < 6; a++) {
+                    for (let b = a+1; b < 6; b++) {
+                        pairM[regs[a]][regs[b]]++;
+                        pairM[regs[b]][regs[a]]++;
+                    }
+                }
+
+                // 分区
+                const zi = zones.findIndex(z => sp >= z[0] && sp <= z[1]);
+                if (zi >= 0) zCount[zi]++;
+            }
+
+            // 全量历史转移率（遍历所有 history，不只 limit 条）
+            for (let idx = 0; idx < N; idx++) {
+                const d = history[idx];
+                const sp = d.openCode[6];
+                freqAllS[sp]++;
+                d.openCode.slice(0, 6).forEach(n => freqAllR[n]++);
+            }
+
+            // === 2. 遗漏统计 ===
+            const missStats = {};
+            for (let i = 1; i <= TOTAL; i++) {
+                const idxs = appearS[i];
+                let curMiss, mx = N, totalGap = 0, gapCnt = 0, mn = N;
+                if (idxs.length > 0) {
+                    curMiss = idxs[0];
+                    for (let g = 0; g < idxs.length - 1; g++) {
+                        const gap = idxs[g+1] - idxs[g];
+                        if (gap > mx) mx = gap;
+                        if (gap < mn) mn = gap;
+                        totalGap += gap; gapCnt++;
+                    }
+                } else {
+                    curMiss = N;
+                }
+                missStats[i] = { cur:curMiss, max:mx, avg:gapCnt>0?totalGap/gapCnt:N, min:mn };
+            }
+
+            // === 3. 因子归一化分母 ===
+            const maxFreq50 = Math.max(...Object.values(freq50), 1);
+            const maxFreq20 = Math.max(...Object.values(freq20), 1);
+            const maxTrend = Math.max(...Object.values(trend), 1);
+            const maxFreq50R = Math.max(...Object.values(freq50R), 1);
+            const totalRegs = oddTotal + evenTotal || 1;
+
+            // 关联性
+            const latestSp = latest.openCode[6];
+            const relate = {};
+            for (let i = 1; i <= TOTAL; i++) {
+                relate[i] = (i % 10 === latestSp % 10 ? 3 : 0)
+                          + (Math.abs(i - latestSp) <= 1 ? 2 : 0);
+            }
+            const maxRel = Math.max(...Object.values(relate), 0.01);
+
+            // 分区偏差
+            const zoneExp = limit / zones.length;
+            const zoneDevs = zCount.map(c => Math.abs(c - zoneExp) / Math.max(zoneExp,1));
+            const maxZoneDev = Math.max(...zoneDevs, 0.01);
+
+            // 奇偶比
+            const oddRatio = oddTotal / totalRegs;
+
+            // 上期特码的生肖 + 五行
+            const latestZodIdx = (latestSp - 1) % 12;
+            const latestElem = ELEM[latestSp % 10];
+            const genElem = ELEM_GEN[latestElem];
+            const resElem = ELEM_RES[latestElem];
+
+            // 热门同出号码（近20期 top5 特码）
+            const hot5 = Object.entries(freq20).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>parseInt(e[0]));
+            const pairScores = {};
+            for (let i = 1; i <= TOTAL; i++) {
+                let s = 0;
+                hot5.forEach(h => { s += pairM[i][h] || 0; });
+                pairScores[i] = s;
+            }
+            const maxPair = Math.max(...Object.values(pairScores), 1);
+
+            // === 4. 综合评分 ===
+            const scores = [];
+            for (let i = 1; i <= TOTAL; i++) {
+                // a. 双窗口频率
+                const freqScore = (freq50[i]/maxFreq50)*0.6 + (freq20[i]/maxFreq20)*0.4;
+
+                // b. 遗漏分 (current/avg)
+                const ms = missStats[i];
+                const missScore = ms.avg > 0 ? Math.min(1, ms.cur / ms.avg) : 0.5;
+
+                // c. 趋势
+                const trendScore = trend[i] / maxTrend;
+
+                // d. 关联
+                const relateScore = relate[i];
+
+                // e. 分区均衡
+                const zi = zones.findIndex(z => i >= z[0] && i <= z[1]);
+                const zoneScore = zi >= 0 ? 1 - (zoneDevs[zi] / maxZoneDev) : 0.5;
+
+                // f. 同出
+                const pairScore = pairScores[i] / maxPair;
+
+                // g. 奇偶均衡
+                const isOdd = i % 2 === 1;
+                const oeScore = Math.max(0, isOdd
+                    ? 1 - Math.abs(oddRatio - 0.5) / 0.5
+                    : 1 - Math.abs((1 - oddRatio) - 0.5) / 0.5);
+
+                // g/h 转移率因子：平码→特码概率
+                const totalAll = freqAllS[i] + freqAllR[i];
+                const total50  = freq50[i] + freq50R[i];
+                const transRateAll = totalAll > 0 ? freqAllS[i] / totalAll : (1/7);
+                const transRate50  = total50  > 0 ? freq50[i] / total50  : (1/7);
+                const transRate = transRateAll * 0.6 + transRate50 * 0.4;
+                // 期望基线：1/7 ≈ 14.3%，偏离越大信号越强，最高±2σ
+                const transScore = Math.max(0, Math.min(1, (transRate - 1/7) / (1/7) * 0.5 + 0.5));
+
+                // i. 原始加权
+                const rawScore =
+                    freqScore * 0.19 +
+                    missScore * 0.17 +
+                    trendScore * 0.14 +
+                    (relateScore > 0 ? (relateScore / maxRel) * 0.10 : 0) +
+                    zoneScore * 0.08 +
+                    pairScore * 0.10 +
+                    oeScore * 0.05 +
+                    transScore * 0.07;
+
+                // i. 回归概率因子（乘法）
+                let regFactor = 1.0;
+                const curMiss = ms.cur, maxMiss = ms.max, avgMiss = ms.avg;
+                if (maxMiss > 0) {
+                    const ratio = curMiss / maxMiss;
+                    if (ratio >= 0.85) regFactor = 1.5;
+                    else if (ratio >= 0.70) regFactor = 1.2;
+                    else if (ratio >= 0.50) regFactor = 1.0;
+                    else if (ratio >= 0.30) regFactor = 0.8;
+                }
+                // 刚出过 → 防守抑制
+                if (avgMiss > 0 && curMiss / avgMiss <= 0.3) {
+                    regFactor = 0.4 + (curMiss / (avgMiss * 0.3)) * 0.3;
+                }
+
+                // j. 生肖三合/六合
+                const candZi = (i - 1) % 12;
+                let harmonyScore = 0;
+                // 三合：同组内其他成员+1
+                for (const triad of TRIAD) {
+                    if (triad.includes(latestZodIdx) && triad.includes(candZi) && candZi !== latestZodIdx) {
+                        harmonyScore = Math.max(harmonyScore, 1);
+                    }
+                }
+                // 六合：配对成员+0.6
+                for (const pair of SIX_H) {
+                    if ((pair[0]===latestZodIdx && pair[1]===candZi) || (pair[1]===latestZodIdx && pair[0]===candZi)) {
+                        harmonyScore = Math.max(harmonyScore, 0.6);
+                    }
+                }
+                // 相冲：配对成员-1
+                let conflictScore = 0;
+                for (const pair of CONFLICT) {
+                    if ((pair[0]===latestZodIdx && pair[1]===candZi) || (pair[1]===latestZodIdx && pair[0]===candZi)) {
+                        conflictScore = 1;
+                    }
+                }
+
+                // k. 五行生克
+                const candElem = ELEM[i % 10];
+                let elemScore = 0;
+                if (candElem === genElem) elemScore = 0.5;   // 相生
+                if (candElem === resElem) elemScore = -0.5;  // 相克
+
+                // 最终得分 = 原始加权 + 玄学特征 ± 五行
+                const finalScore = rawScore * regFactor + harmonyScore * 0.08 - conflictScore * 0.06 + elemScore * 0.05;
+
+                scores.push({ n:i, finalScore, regFactor });
+            }
+
+            // === 5. Z-score 标准化 ===
+            const mean = scores.reduce((s,x)=>s+x.finalScore,0) / scores.length;
+            const variance = scores.reduce((s,x)=>s+Math.pow(x.finalScore-mean,2),0) / scores.length;
+            const stdDev = Math.sqrt(variance) || 1;
+            scores.forEach(s => { s.z = (s.finalScore - mean) / stdDev; });
+
+            const getMarker = z => z >= 1.5 ? '🔥' : z >= 0.5 ? '📌' : '·';
+
+            // === 6. 排序输出 ===
+            scores.sort((a,b) => b.finalScore - a.finalScore);
+            let top10 = scores.slice(0,10).map(s=>s.n);
+            let top20 = scores.slice(0,20).map(s=>s.n);
+            let top30 = scores.slice(0,30).map(s=>s.n);
+
+            const zValues = {}, markers = {};
+            scores.forEach(s => { zValues[s.n]=s.z; markers[s.n]=getMarker(s.z); });
+
+            // === 7. 波色 & 生肖：双向软耦合 ===
+            let { waves, sixiao, sanxiao } = predictWaveZodiac(history);
+            const WAVE_NAMES = ['红波','蓝波','绿波'];
+
+            // --- A. 号码 ← 波色生肖（0.02/0.01 软绑，仅做 tie-breaker） ---
+            const waveBoost = {};
+            WAVE_NAMES.forEach(w => waveBoost[w] = waves.includes(w) ? 0.02 : 0);
+            const zodiacBoost = {};
+            ZODIAC.forEach(z => zodiacBoost[z] = sixiao.includes(z) ? 0.01 : 0);
+            scores.forEach(s => {
+                s.finalScore += waveBoost[waveName(s.n)] + zodiacBoost[zodiac(s.n)];
+            });
+            scores.sort((a,b) => b.finalScore - a.finalScore);
+
+            // --- B. 波色生肖 ← 号码（top20 分布作第二参考，二者取并集） ---
+            const wCount = {红波:0,蓝波:0,绿波:0};
+            const zodCount = {};
+            ZODIAC.forEach(z => zodCount[z]=0);
+            scores.slice(0,20).forEach(s => { wCount[waveName(s.n)]++; zodCount[zodiac(s.n)]++; });
+            waves = [...new Set([...waves, ...Object.entries(wCount).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0])])].slice(0,2);
+            const mixedZod = [...new Set([...sixiao, ...Object.entries(zodCount).sort((a,b)=>b[1]-a[1]).slice(0,6).map(e=>e[0])])];
+            sixiao = mixedZod.slice(0,6);
+            sanxiao = mixedZod.slice(0,3);
+
+            // === 8. 带波色生肖约束的精选（最后一步，确保覆盖） ===
+            top10 = pickWithGuarantees(scores, 10, waves, sanxiao);
+            top20 = pickWithGuarantees(scores, 20, waves, sanxiao);
+            // top30 不用约束，直接高分填满
+            const used30 = new Set([...top10, ...top20]);
+            top30 = scores.filter(s => !used30.has(s.n)).slice(0, 30 - top20.length).map(s => s.n);
+            // 如果还不够 30 个（理论上不会），补剩余高分
+            while (top30.length + top20.length < 30) {
+                for (const s of scores) {
+                    if (top30.length + top20.length >= 30) break;
+                    if (!used30.has(s.n) && !top30.includes(s.n)) {
+                        top30.push(s.n);
+                    }
+                }
+            }
+
+            return {
+                expect: nextExpect,
+                top10, top20, top30,
+                zValues, markers,
+                spec: { sixiao, sanxiao, waves }
+            };
+        }
+
+        const PLACEHOLDER_TEXT = ['同','步','官','方','开','奖','中'];
+
+        function renderDraw(draw) {
+            const c = document.getElementById('drawNumbers');
+            const expectEl = document.getElementById('drawExpect');
+            expectEl.textContent = (draw && draw.expect) ? draw.expect : '最新开奖';
+            if (!draw || !draw.codes || draw.codes.length === 0) {
+                c.innerHTML = '<div style="color:var(--text-secondary);font-size:0.8rem;padding:10px">暂无开奖数据</div>';
+                return;
+            }
+            const allNull = draw.codes.every(cn => cn === null);
+            let h = '';
+            for (let i = 0; i < 7; i++) {
+                const n = (draw.codes.length > i) ? draw.codes[i] : null;
+                if (i === 6) h += '<span class="plus-sign">+</span>';
+                if (n === null) {
+                    // 全空 → 拼"同步官方开奖中"带波浪动画；部分空 → 显示占位符
+                    const label = allNull ? PLACEHOLDER_TEXT[i] : '···';
+                    const animClass = allNull ? ' placeholder-ball' : '';
+                    h += `<div class="num-item"><div class="num-ball${animClass}" style="background:var(--bg-header);color:var(--text-secondary);">${label}</div><span class="zodiac-sm">···</span></div>`;
+                } else {
+                    h += `<div class="num-item"><div class="num-ball ball-${wave(n)}${i===6?' ball-special':''} pop-animation">${pad(n)}</div><span class="zodiac-sm">${zodiac(n)}</span></div>`;
+                }
+            }
+            c.innerHTML = h;
+        }
+
+        // ===== 分页状态 =====
+        let historyPage = 0; // 当前历史页，0=最新
+
+        // 生成单个预测的HTML
+        function renderPredictionItem(pred, drawForJudgment) {
+            const tag = nums => nums.map(n => {
+                const m = (pred.markers && pred.markers[n]) || '·';
+                const cls = m === '🔥' ? ' style="box-shadow:0 0 6px rgba(255,107,53,0.5)"' : '';
+                return `<span class="bt-dim-tag ${wave(n)}"${cls}>${pad(n)}</span>`;
+            }).join('');
+            const gridRow = items => `<div class="tag-grid tag-grid-10">${tag(items)}</div>`;
+            const rows30 = [];
+            for (let i = 0; i < 3; i++) { const row = pred.top30.slice(i*10, (i+1)*10); if (row.length) rows30.push(gridRow(row)); }
+            const rows20 = [];
+            for (let i = 0; i < 2; i++) { const row = pred.top20.slice(i*10, (i+1)*10); if (row.length) rows20.push(gridRow(row)); }
+            const cell = (label, yes, text) => `<div class="bt-dim-cell"><div class="bt-dim-label">${label}</div><span class="bt-hit-badge ${yes ? 'yes' : 'no'}">${text}</span></div>`;
+            const hasR = drawForJudgment && drawForJudgment.expect === pred.expect && drawForJudgment.codes && drawForJudgment.codes.length >= 7 && drawForJudgment.codes[6] !== null;
+            let gridHtml;
+            if (hasR) {
+                const rc = drawForJudgment.codes, rSp = rc[6], rSpZ = zodiac(rSp), rSpW = waveName(rSp);
+                const rI10 = pred.top10.includes(rSp), rI20 = pred.top20.includes(rSp), rI30 = pred.top30.includes(rSp);
+                let rTe = '未中', rTeH = false;
+                if (rI10) { rTe = '中10码'; rTeH = true; } else if (rI20) { rTe = '中20码'; rTeH = true; } else if (rI30) { rTe = '中30码'; rTeH = true; }
+                const rWH = pred.spec.waves.includes(rSpW), r6H = pred.spec.sixiao.includes(rSpZ), r3H = pred.spec.sanxiao.includes(rSpZ);
+                let rSx = '未中', rSxH = false;
+                if (r3H) { rSx = '中3肖'; rSxH = true; } else if (r6H) { rSx = '中6肖'; rSxH = true; }
+                gridHtml = `<div class="bt-dim-grid">${cell('特码',rTeH,rTe)}${cell('波色',rWH,rWH?'中':'未中')}${cell('生肖',rSxH,rSx)}</div>`;
+            } else {
+                const w = `<span class="bt-hit-badge wait">等待开奖中</span>`;
+                gridHtml = `<div class="bt-dim-grid"><div class="bt-dim-cell"><div class="bt-dim-label">特码</div>${w}</div><div class="bt-dim-cell"><div class="bt-dim-label">波色</div>${w}</div><div class="bt-dim-cell"><div class="bt-dim-label">生肖</div>${w}</div></div>`;
+            }
+            const waveChip = w => { const c = w.includes('红') ? 'red' : w.includes('蓝') ? 'blue' : 'green'; return `<span class="bt-dim-tag ${c}">${w}</span>`; };
+            const zodiacChip = z => `<span class="bt-dim-tag zodiac">${z}</span>`;
+            return `
+                <div class="bt-expect" style="margin-bottom:6px">第 ${pred.expect} 期</div>
+                <div class="bt-pred-area">
+                    <div class="bt-pred-row"><div class="bt-pred-label">核心10码：</div>${gridRow(pred.top10)}</div>
+                    <div class="bt-pred-row"><div class="bt-pred-label">精选20码：</div>${rows20.join('')}</div>
+                    <div class="bt-pred-row" style="margin-bottom:0"><div class="bt-pred-label">包围30码：</div>${rows30.join('')}</div>
+                    <div class="bt-pred-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px">
+                            <span class="bt-pred-label" style="margin-bottom:0">波色：</span>${pred.spec.waves.map(waveChip).join('')}
+                            <span class="bt-pred-label" style="margin-bottom:0">三肖：</span>${pred.spec.sanxiao.map(zodiacChip).join('')}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-top:4px">
+                            <span class="bt-pred-label" style="margin-bottom:0">六肖：</span>${pred.spec.sixiao.map(zodiacChip).join('')}
+                        </div>
+                    </div>
+                </div>
+                ${gridHtml}
+            `;
+        }
+
+        function renderPrediction(pred, currentDraw) {
+            const container = document.getElementById('predictionContent');
+            if (!pred) { container.innerHTML = '<div class="loading-text">数据不足，无法预测</div>'; return; }
+
+            // 当前预测
+            let html = renderPredictionItem(pred, currentDraw);
+
+            // 历史预测（分页，5条/页）
+            const allPreds = Object.keys(localStorage)
+                .filter(k => k.startsWith('pred_'))
+                .sort()
+                .reverse(); // 最新在前
+            const PAGE = 1;
+            const totalPages = Math.max(1, Math.ceil(allPreds.length / PAGE));
+
+            // 确保当前页合法
+            if (historyPage < 0) historyPage = 0;
+            if (historyPage >= totalPages) historyPage = totalPages - 1;
+
+            if (allPreds.length > 1) {
+                // 从列表中排除当前预测（第一个），显示其他历史
+                const start = historyPage * PAGE + 1; // +1 跳过当前
+                const pageKeys = allPreds.slice(start, start + PAGE);
+
+                if (pageKeys.length > 0) {
+                    html += `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">`;
+                    html += `<div style="font-size:clamp(0.55rem,0.8vw+0.2rem,0.65rem);color:var(--text-secondary);margin-bottom:6px;font-weight:700">历史预测</div>`;
+                    pageKeys.forEach(key => {
+                        const saved = loadPrediction(key.replace('pred_', ''));
+                        if (saved) {
+                            // 查有没有对应的开奖数据做判断
+                            let drawFor = null;
+                            if (currentDraw && currentDraw.expect === saved.expect && currentDraw.codes && currentDraw.codes.length >= 7) {
+                                drawFor = currentDraw;
+                            } else {
+                                // 从 localStorage 中反查该预测期号对应的开奖结果
+                                drawFor = loadDrawResult(saved.expect);
+                            }
+                            html += `<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">${renderPredictionItem(saved, drawFor)}</div>`;
+                        }
+                    });
+                    html += `</div>`;
+
+                    // 分页导航
+                    html += `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px">`;
+                    html += `<button class="btn-icon" id="histPrevBtn" ${historyPage <= 0 ? 'disabled style="opacity:0.4"' : ''}><i class="fas fa-chevron-left"></i> 上一页</button>`;
+                    html += `<span style="font-size:0.7rem;color:var(--text-secondary)">${historyPage+1}/${totalPages}</span>`;
+                    html += `<button class="btn-icon" id="histNextBtn" ${historyPage >= totalPages-1 ? 'disabled style="opacity:0.4"' : ''}>下一页 <i class="fas fa-chevron-right"></i></button>`;
+                    html += `</div>`;
+                }
+            }
+
+            container.innerHTML = html;
+
+            // 分页按钮事件
+            const prevBtn = document.getElementById('histPrevBtn');
+            const nextBtn = document.getElementById('histNextBtn');
+            if (prevBtn && !prevBtn.disabled) {
+                prevBtn.onclick = () => { historyPage--; renderPrediction(pred, currentDraw); };
+            }
+            if (nextBtn && !nextBtn.disabled) {
+                nextBtn.onclick = () => { historyPage++; renderPrediction(pred, currentDraw); };
+            }
+        }
+
+        function getNextDrawTime() {
+            const now = new Date();
+            const target = new Date(now);
+            target.setHours(21, 33, 0, 0);
+            // 注意：此处不加一天，是否已过由 updateCountdown 和 drawState 管理
+            return target;
+        }
+
+        function updateCountdown(expect, state) {
+            const bar = document.getElementById('countdownBar');
+            if (!bar) return;
+
+            if (state === 'waiting') {
+                // 等待开奖状态（已过 21:33，开奖未完成）
+                bar.innerHTML = `第 <strong>${expect||'--'}</strong> 期 · <span class="countdown-live">🔴 等待开奖中</span>`;
+                return;
+            }
+
+            // 正常/即将开奖 倒计时模式
+            const now = new Date();
+            const target = getNextDrawTime();
+            if (target <= now) target.setDate(target.getDate() + 1); // 已过时间 → 跳到明天
+            const diff = Math.max(0, Math.floor((target - now) / 1000));
+            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            if (diff < 300) bar.innerHTML = `下期 <strong>${expect||''}</strong> 期 · <span class="countdown-live">🔴 即将开奖 ${h}:${m}:${s}</span>`;
+            else bar.innerHTML = `下期 <strong>${expect||''}</strong> 期开奖倒计时 <span class="countdown-num">${h}:${m}:${s}</span>`;
+        }
+
+        let currentDraw = null, currentPred = null, countdownTimer = null, refreshing = false, drawState = 'normal', lastDrawDate = '', wsStatusBadge = document.getElementById('wsStatus');
+
+        // 持久化保存预测（当天一致）
+        function savePrediction(key, data) {
+            try {
+                localStorage.setItem('pred_' + key, JSON.stringify(data));
+                // 清理旧预测，最多保留最近50条
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('pred_'));
+                if (keys.length > 50) {
+                    keys.sort().slice(0, keys.length - 50).forEach(k => localStorage.removeItem(k));
+                }
+            } catch(e) {}
+        }
+
+        function loadPrediction(key) {
+            try {
+                const raw = localStorage.getItem('pred_' + key);
+                return raw ? JSON.parse(raw) : null;
+            } catch(e) { return null; }
+        }
+
+        function saveDrawResult(expect, codes) {
+            try {
+                localStorage.setItem('draw_' + expect, JSON.stringify({ expect, codes }));
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('draw_'));
+                if (keys.length > 50) {
+                    keys.sort().slice(0, keys.length - 50).forEach(k => localStorage.removeItem(k));
+                }
+            } catch(e) {}
+        }
+
+        function loadDrawResult(expect) {
+            try {
+                const raw = localStorage.getItem('draw_' + expect);
+                return raw ? JSON.parse(raw) : null;
+            } catch(e) { return null; }
+        }
+
+        async function refresh() {
+            if (typeof refreshing !== 'undefined' && refreshing) return;
+            refreshing = true;
+            drawState = 'normal'; // 手动刷新时退出等待状态
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                let attempts = 0;
+                currentDraw = await fetchLiveDraw();
+                // 首次失败 → 等 2 秒重试一次
+                if (!currentDraw && attempts < 1) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 1500));
+                    currentDraw = await fetchLiveDraw();
+                }
+
+                const y = new Date().getFullYear();
+                let history = await fetchHistory(y);
+                if (history.length < 30) history = history.concat(await fetchHistory(y - 1));
+                history.sort((a,b) => parseInt(b.expect) - parseInt(a.expect));
+                history = history.slice(0, 50);
+
+                if (!currentDraw && history.length > 0) {
+                    const latest = history[0];
+                    currentDraw = { expect: latest.expect, codes: latest.openCode };
+                }
+                renderDraw(currentDraw);
+
+                // 持久化开奖结果（仅有效开奖，不含占位符）
+                if (currentDraw && currentDraw.codes && currentDraw.codes.length >= 7 && currentDraw.codes.some(c => c !== null)) {
+                    saveDrawResult(currentDraw.expect, currentDraw.codes);
+                }
+
+                if (history.length >= 20) {
+                    // 已有预测绝不重算，只对新的期号生成
+                    const nextExpect = String(parseInt(history[0].expect) + 1);
+                    let pred = loadPrediction(nextExpect);
+                    if (!pred) {
+                        pred = predict(history);
+                        savePrediction(nextExpect, pred);
+                    }
+                    renderPrediction(pred, currentDraw);
+                    currentPred = pred;
+                    updateCountdown(pred.expect);
+                } else {
+                    document.getElementById('predictionContent').innerHTML = '<div class="loading-text">历史数据不足（需≥20期），无法预测</div>';
+                    updateCountdown('');
+                }
+
+                if (wsStatusBadge) { wsStatusBadge.classList.add('connected'); wsStatusBadge.classList.remove('disconnected'); wsStatusBadge.title = '已连接'; }
+            } catch(e) {
+                console.error('[refresh] 刷新失败:', e.message);
+                document.getElementById('predictionContent').innerHTML = '<div class="loading-text" style="color:#f85149;">网络异常，请检查网络后重试</div>';
+                if (wsStatusBadge) { wsStatusBadge.classList.remove('connected'); wsStatusBadge.classList.add('disconnected'); wsStatusBadge.title = '连接异常'; }
+            }
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+            refreshing = false;
+        }
+
+        document.getElementById('copyDrawBtn').addEventListener('click', () => {
+            if (!currentDraw || !currentDraw.codes || currentDraw.codes.length < 7) { showToast('暂无开奖数据'); return; }
+            const cs = currentDraw.codes;
+            const sp = cs[6];
+            const txt = cs.slice(0,6).map(pad).join(',') + ' + ' + pad(sp) + ' ' + zodiac(sp);
+            copyToClipboard(txt);
+        });
+        document.getElementById('copyPredBtn').addEventListener('click', () => {
+            if (!currentPred) { showToast('暂无预测数据'); return; }
+            const p = currentPred;
+            // 带标记的10码
+            const mark = n => (p.markers && p.markers[n] === '🔥') ? '[' + pad(n) + ']' : pad(n);
+            // 20码/30码分行
+            const r20 = [p.top20.slice(0,10), p.top20.slice(10,20)].map(row => row.map(pad).join(' '));
+            const r30 = [];
+            for (let i = 0; i < 3; i++) {
+                const row = p.top30.slice(i*10, (i+1)*10).map(pad).join(' ');
+                r30.push(row);
+            }
+            const hotNums = p.top10.filter(n => (p.markers && p.markers[n] === '🔥')).map(pad).join(' ');
+            const txt = `第 ${p.expect} 期\n\n核心10码：\n${p.top10.map(mark).join(' ')}\n\n精选20码：\n${r20[0]}\n${r20[1]}\n\n包围30码：\n${r30[0]}\n${r30[1]}\n${r30[2]}\n\n波色：${p.spec.waves.join(' ')}\n三肖：${p.spec.sanxiao.join(' ')}\n六肖：${p.spec.sixiao.join(' ')}${hotNums ? '\n\n🔥 热号：' + hotNums : ''}`;
+            copyToClipboard(txt);
+        });
+
+        // 初始加载 + 标记已处理的开奖期
+        refresh().then(() => {
+            if (currentDraw && currentDraw.codes && currentDraw.codes.length >= 7) {
+                processedDrawPeriod = currentDraw.expect;
+            }
+        });
+
+        // 倒计时 + 开奖窗口期内秒级轮询同步
+        let drawTick = 0, processedDrawPeriod = null, lastRenderHash = '';
+
+        async function countdownTick() {
+            drawTick++;
+            const now = new Date();
+            const target = getNextDrawTime(); // 21:33:00 today, 不自动 +1 天
+            const pastTarget = now >= target;
+            const today = now.toISOString().slice(0, 10);
+            const hh = now.getHours(), mm = now.getMinutes();
+            const inDrawTimeWindow = (hh === 21 && mm >= 27 && mm <= 40); // 21:27-21:40 提前加速
+
+            // 状态转换：已过 21:33 且今天尚未确认为开奖完成 → 进入等待状态
+            if (pastTarget && lastDrawDate !== today && drawState === 'normal') {
+                drawState = 'waiting';
+            }
+
+            // 轮询频率：等待或开奖窗口 → 每 2 秒，平时每 10 秒
+            const isFastPoll = drawState === 'waiting' || inDrawTimeWindow;
+            const pollInterval = isFastPoll ? 2 : 10;
+            const shouldPoll = (drawTick % pollInterval === 0) && !refreshing;
+
+            if (shouldPoll) {
+                try {
+                    const latestTry = await fetchLiveDraw();
+                    if (latestTry) {
+                        const allComplete = latestTry.codes.every(c => c !== null);
+                        const anyPartial = latestTry.codes.some(c => c !== null);
+                        const renderHash = latestTry.expect + ':' + latestTry.codes.join(',');
+
+                        if (allComplete) {
+                            // 全部开完 → 标记今日完成 + 刷新预测
+                            const period = latestTry.expect;
+                            if (period !== processedDrawPeriod) {
+                                processedDrawPeriod = period;
+                                lastRenderHash = renderHash;
+                                lastDrawDate = today;
+                                drawState = 'normal';
+                                showToast('📊 第 ' + period + ' 期开奖完成，正在预测下期...');
+                                refresh();
+                            }
+                        } else if (anyPartial && renderHash !== lastRenderHash) {
+                            // 部分开奖（逐号出）→ 只更新显示
+                            lastRenderHash = renderHash;
+                            document.getElementById('drawExpect').textContent = latestTry.expect;
+                            renderDraw(latestTry);
+                        }
+                    }
+                } catch(e) { /* 轮询失败静默跳过 */ }
+            }
+
+            // 更新倒计时栏
+            if (drawState === 'waiting') {
+                const waitingPeriod = currentDraw ? String(parseInt(currentDraw.expect) + 1) : '--';
+                updateCountdown(waitingPeriod, 'waiting');
+            } else {
+                const exp = currentDraw ? String(parseInt(currentDraw.expect) + 1) : '';
+                updateCountdown(exp, 'normal');
+            }
+        }
+
+        if (countdownTimer) clearInterval(countdownTimer);
+        countdownTimer = setInterval(countdownTick, 1000);
+
+        // 页面隐藏时暂停定时器，节省资源
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            } else {
+                if (!countdownTimer) {
+                    countdownTimer = setInterval(countdownTick, 1000);
+                }
+            }
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', refresh);
+    </script>
+</body>
+</html>

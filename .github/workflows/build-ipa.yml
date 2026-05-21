@@ -1,0 +1,44 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build iOS App
+        run: |
+          cd iOSApp
+          xcodebuild -project WebViewApp.xcodeproj \
+                     -scheme WebViewApp \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -derivedDataPath build \
+                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGNING_ALLOWED=NO \
+                     ARCHS=arm64 \
+                     clean build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r iOSApp/build/Build/Products/Release-iphoneos/WebViewApp.app Payload/
+          # 确保 index.html 在正确位置
+          cp index.html Payload/WebViewApp.app/
+          zip -r MacauAI.ipa Payload/ -x "*.DS_Store"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacauAI.ipa
+          path: MacauAI.ipa

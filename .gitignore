@@ -1,0 +1,4 @@
+# 忽略本地构建产物
+Payload/
+*.ipa
+.DS_Store
