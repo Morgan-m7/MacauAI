@@ -9,8 +9,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Build iOS App
         run: |
@@ -28,14 +27,15 @@ jobs:
 
       - name: Package IPA
         run: |
-          APP_DIR=iOSApp/build/Build/Products/Release-iphoneos/MacauAI.app
+          APP_PATH=
+          echo "Found app at: "
+          ls -la ""
           mkdir -p Payload/MacauAI.app
           cp -r ""/* Payload/MacauAI.app/
           cp iOSApp/index.html Payload/MacauAI.app/
           zip -r MacauAI.ipa Payload/
 
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: MacauAI.ipa
           path: MacauAI.ipa
