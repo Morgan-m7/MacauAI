@@ -28,7 +28,7 @@ jobs:
 
       - name: Package IPA
         run: |
-          APP_DIR=iosApp/build/Build/Products/Release-iphoneos/MacauAI.app
+          APP_DIR=iOSApp/build/Build/Products/Release-iphoneos/MacauAI.app
           mkdir -p Payload/MacauAI.app
           cp -r ""/* Payload/MacauAI.app/
           cp iOSApp/index.html Payload/MacauAI.app/
