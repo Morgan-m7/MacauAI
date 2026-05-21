@@ -39,14 +39,11 @@
         .bt-pred-area { background: var(--bg-header); border-radius: 8px; padding: 10px; margin: 0; }
         .bt-pred-label { font-size: clamp(9px, 1vw + 6px, 12px); color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
         .bt-pred-row { margin-bottom: 4px; }
-        .bt-dim-tag { display: flex; align-items: center; justify-content: center; width: 2.2em; height: 2.2em; border-radius: 50%; font-size: clamp(10px, 1.2vw + 6px, 13px); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.25); margin: auto; }
+        .bt-dim-tag { display: inline-block; padding: 1px 5px; font-size: clamp(10px, 1.2vw + 6px, 13px); font-weight: 700; border-radius: 3px; margin: 1px; }
         .bt-dim-tag.red { color: #ff6b6b; background: rgba(231,76,60,0.18); }
         .bt-dim-tag.blue { color: #60a5fa; background: rgba(52,152,219,0.18); }
         .bt-dim-tag.green { color: #4ade80; background: rgba(39,174,96,0.18); }
         .bt-dim-tag.zodiac { color: var(--text-primary); background: var(--bg-header); }
-        .tag-grid { display: grid; gap: 4px; }
-        .tag-grid-10 { grid-template-columns: repeat(10, 1fr); }
-        .bt-pred-row .tag-grid { margin-top: 2px; }
 
         /* ===== 网格判断 ===== */
         .bt-dim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 8px 0 0; }
@@ -636,16 +633,12 @@
 
         // 生成单个预测的HTML
         function renderPredictionItem(pred, drawForJudgment) {
-            const tag = nums => nums.map(n => {
-                const m = (pred.markers && pred.markers[n]) || '·';
-                const cls = m === '🔥' ? ' style="box-shadow:0 0 6px rgba(255,107,53,0.5)"' : '';
-                return `<span class="bt-dim-tag ${wave(n)}"${cls}>${pad(n)}</span>`;
-            }).join('');
-            const gridRow = items => `<div class="tag-grid tag-grid-10">${tag(items)}</div>`;
+            const tag = nums => nums.map(n => `<span class="bt-dim-tag ${wave(n)}">${pad(n)}</span>`).join('');
+            const numRow = items => `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${tag(items)}</div>`;
             const rows30 = [];
-            for (let i = 0; i < 3; i++) { const row = pred.top30.slice(i*10, (i+1)*10); if (row.length) rows30.push(gridRow(row)); }
+            for (let i = 0; i < 3; i++) { const row = pred.top30.slice(i*10, (i+1)*10); if (row.length) rows30.push(numRow(row)); }
             const rows20 = [];
-            for (let i = 0; i < 2; i++) { const row = pred.top20.slice(i*10, (i+1)*10); if (row.length) rows20.push(gridRow(row)); }
+            for (let i = 0; i < 2; i++) { const row = pred.top20.slice(i*10, (i+1)*10); if (row.length) rows20.push(numRow(row)); }
             const cell = (label, yes, text) => `<div class="bt-dim-cell"><div class="bt-dim-label">${label}</div><span class="bt-hit-badge ${yes ? 'yes' : 'no'}">${text}</span></div>`;
             const hasR = drawForJudgment && drawForJudgment.expect === pred.expect && drawForJudgment.codes && drawForJudgment.codes.length >= 7 && drawForJudgment.codes[6] !== null;
             let gridHtml;
@@ -667,7 +660,7 @@
             return `
                 <div class="bt-expect" style="margin-bottom:6px">第 ${pred.expect} 期</div>
                 <div class="bt-pred-area">
-                    <div class="bt-pred-row"><div class="bt-pred-label">核心10码：</div>${gridRow(pred.top10)}</div>
+                    <div class="bt-pred-row"><div class="bt-pred-label">核心10码：</div>${numRow(pred.top10)}</div>
                     <div class="bt-pred-row"><div class="bt-pred-label">精选20码：</div>${rows20.join('')}</div>
                     <div class="bt-pred-row" style="margin-bottom:0"><div class="bt-pred-label">包围30码：</div>${rows30.join('')}</div>
                     <div class="bt-pred-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
